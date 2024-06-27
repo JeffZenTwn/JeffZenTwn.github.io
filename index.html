@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>音樂播放器 - 滾動歌詞與白色星空背景</title>
+    <style>
+        body, html {
+            height: 100%;
+            margin: 0;
+            font-family: Arial, sans-serif;
+            overflow: hidden;
+            background: radial-gradient(ellipse at bottom, #1B2735 0%, #090A0F 100%);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .stars {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 120%;
+            transform: rotate(-45deg);
+        }
+        .star {
+            --star-color: rgba(255, 255, 255, 0.8);  /* 將星星顏色改為白色 */
+            --star-tail-length: 6em;
+            --star-tail-height: 2px;
+            --star-width: calc(var(--star-tail-length) / 6);
+            --fall-duration: 9s;
+            --tail-fade-duration: var(--fall-duration);
+
+            position: absolute;
+            top: var(--top-offset);
+            left: 0;
+            width: var(--star-tail-length);
+            height: var(--star-tail-height);
+            color: var(--star-color);
+            background: linear-gradient(45deg, currentColor, transparent);
+            border-radius: 50%;
+            filter: drop-shadow(0 0 6px currentColor);
+            transform: translate3d(104em, 0, 0);
+            animation: fall var(--fall-duration) var(--fall-delay) linear infinite, tail-fade var(--tail-fade-duration) var(--fall-delay) ease-out infinite;
+        }
+        @keyframes fall {
+            to {
+                transform: translate3d(-30em, 0, 0);
+            }
+        }
+        @keyframes tail-fade {
+            0%, 50% {
+                width: var(--star-tail-length);
+                opacity: 1;
+            }
+            70%, 80% {
+                width: 0;
+                opacity: 0.4;
+            }
+            100% {
+                width: 0;
+                opacity: 0;
+            }
+        }
+        .star::before, .star::after {
+            content: '';
+            position: absolute;
+            top: calc(var(--star-height) / -2);
+            right: 0;
+            height: var(--star-height);
+            background: linear-gradient(45deg, transparent, currentColor, transparent);
+            border-radius: inherit;
+            animation: blink 2s linear infinite;
+        }
+        .star::before {
+            transform: rotate(45deg);
+        }
+        .star::after {
+            transform: rotate(-45deg);
+        }
+        @keyframes blink {
+            50% {
+                opacity: 0.6;
+            }
+        }
+        .star:nth-child(1) { --star-tail-length: 5.17em; --top-offset: 40.23vh; --fall-duration: 8.585s; --fall-delay: 0.872s; }
+        .star:nth-child(2) { --star-tail-length: 6.06em; --top-offset: 62.58vh; --fall-duration: 11.194s; --fall-delay: 5.092s; }
+        .star:nth-child(3) { --star-tail-length: 5.62em; --top-offset: 21.67vh; --fall-duration: 7.193s; --fall-delay: 1.826s; }
+        .star:nth-child(4) { --star-tail-length: 6.46em; --top-offset: 53.69vh; --fall-duration: 10.752s; --fall-delay: 3.394s; }
+        .star:nth-child(5) { --star-tail-length: 5.72em; --top-offset: 84.98vh; --fall-duration: 8.323s; --fall-delay: 2.611s; }
+        .star:nth-child(6) { --star-tail-length: 5.99em; --top-offset: 43.93vh; --fall-duration: 9.454s; --fall-delay: 4.057s; }
+        .star:nth-child(7) { --star-tail-length: 5.22em; --top-offset: 91.25vh; --fall-duration: 7.562s; --fall-delay: 0.845s; }
+        .star:nth-child(8) { --star-tail-length: 6.68em; --top-offset: 32.09vh; --fall-duration: 11.735s; --fall-delay: 5.298s; }
+        .star:nth-child(9) { --star-tail-length: 5.16em; --top-offset: 76.37vh; --fall-duration: 6.991s; --fall-delay: 3.622s; }
+        .star:nth-child(10) { --star-tail-length: 5.95em; --top-offset: 56.94vh; --fall-duration: 10.413s; --fall-delay: 2.179s; }
+        .star:nth-child(11) { --star-tail-length: 5.57em; --top-offset: 15.62vh; --fall-duration: 8.874s; --fall-delay: 1.253s; }
+        .star:nth-child(12) { --star-tail-length: 6.33em; --top-offset: 68.81vh; --fall-duration: 9.876s; --fall-delay: 4.783s; }
+        .star:nth-child(13) { --star-tail-length: 5.84em; --top-offset: 39.46vh; --fall-duration: 7.341s; --fall-delay: 3.015s; }
+        .star:nth-child(14) { --star-tail-length: 6.12em; --top-offset: 82.73vh; --fall-duration: 10.629s; --fall-delay: 0.587s; }
+        .star:nth-child(15) { --star-tail-length: 5.38em; --top-offset: 27.85vh; --fall-duration: 8.152s; --fall-delay: 2.944s; }
+        .player-container {
+            text-align: center;
+            background-color: rgba(255, 255, 255, 0.1);
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(255,255,255,0.1);
+            width: 300px;
+            backdrop-filter: blur(5px);
+            z-index: 1;
+        }
+        #lyrics-container {
+            height: 150px;
+            overflow: hidden;
+            position: relative;
+            margin-top: 20px;
+        }
+        #lyrics {
+            position: absolute;
+            width: 100%;
+            transition: transform 0.3s ease;
+        }
+        .lyric-line {
+            padding: 5px 0;
+            opacity: 0.6;
+            transition: opacity 0.3s ease;
+            color: #FFF;
+        }
+        .lyric-line.active {
+            opacity: 1;
+            font-weight: bold;
+        }
+        #currentTime {
+            margin-top: 10px;
+            font-size: 14px;
+            color: #FFF;
+        }
+        h2 {
+            color: #FFF;
+        }
+        audio {
+            width: 100%;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="stars">
+        <div class="star"></div>
+        <div class="star"></div>
+        <div class="star"></div>
+        <div class="star"></div>
+        <div class="star"></div>
+        <div class="star"></div>
+        <div class="star"></div>
+        <div class="star"></div>
+        <div class="star"></div>
+        <div class="star"></div>
+        <div class="star"></div>
+        <div class="star"></div>
+        <div class="star"></div>
+        <div class="star"></div>
+        <div class="star"></div>
+    </div>
+    <div class="player-container">
+        <h2>奇異恩典</h2>
+        <audio id="audioPlayer" controls>
+            <source src="https://upload.wikimedia.org/wikipedia/commons/0/01/Amazing_Grace_with_vocals_and_guitar_by_Rocks_From_The_Garden_-_20060603.ogg" type="audio/ogg">
+            您的瀏覽器不支持音頻元素。
+        </audio>
+        <div id="currentTime">00:00</div>
+        <div id="lyrics-container">
+            <div id="lyrics"></div>
+        </div>
+    </div>
+
+    <script>
+        // JavaScript 代碼保持不變
+        const audioPlayer = document.getElementById('audioPlayer');
+        const lyricsDiv = document.getElementById('lyrics');
+        const currentTimeDiv = document.getElementById('currentTime');
+
+        const lyrics = [
+            {time: 4, text:"Amazing grace, how sweet the sound"},
+            {time: 15, text:"That saved a wretch like me"},
+            {time: 25, text:"I once was lost, but now I'm found"},
+            {time: 34, text:"Was blind, but now I see"},
+            {time: 44, text:"'Twas grace that taught my heart to fear"},
+            {time: 54, text:"And grace, my fears relieved"},
+            {time: 63, text:"How precious did that grace appear"},
+            {time: 73, text:"The hour I first believed"},
+            {time: 100, text:"Through many dangers, toils and snares"},
+            {time: 100, text:"We have already come"},
+            {time: 100, text:"'Twas grace that brought us safe thus far"},
+            {time: 100, text:"And grace will lead us home"},
+            {time: 100, text:"When we've been there ten thousand years"},
+            {time: 100, text:"Bright shining as the sun"},
+            {time: 100, text:"We've no less days to sing God's praise"},
+            {time: 100, text:"Than when we first begun"},
+            {time: 100, text:"Than when we first begun"}
+        ];
+
+        function formatTime(seconds) {
+            const minutes = Math.floor(seconds / 60);
+            const remainingSeconds = Math.floor(seconds % 60);
+            return `${minutes.toString().padStart(2, '0')}:${remainingSeconds.toString().padStart(2, '0')}`;
+        }
+
+        function initializeLyrics() {
+            lyrics.forEach((line, index) => {
+                const div = document.createElement('div');
+                div.textContent = line.text;
+                div.className = 'lyric-line';
+                div.id = `lyric-${index}`;
+                lyricsDiv.appendChild(div);
+            });
+        }
+
+        function updateLyrics(currentTime) {
+            let activeIndex = lyrics.findIndex(line => line.time > currentTime) - 1;
+            if (activeIndex === -2) activeIndex = lyrics.length - 1;
+
+            document.querySelectorAll('.lyric-line').forEach((line, index) => {
+                line.classList.toggle('active', index === activeIndex);
+            });
+
+            if (activeIndex >= 0) {
+                const activeElement = document.getElementById(`lyric-${activeIndex}`);
+                const containerHeight = document.getElementById('lyrics-container').offsetHeight;
+                const offset = activeElement.offsetTop - containerHeight / 2 + activeElement.offsetHeight / 2;
+                lyricsDiv.style.transform = `translateY(-${offset}px)`;
+            }
+        }
+
+        audioPlayer.addEventListener('timeupdate', () => {
+            const currentTime = audioPlayer.currentTime;
+            currentTimeDiv.textContent = formatTime(currentTime);
+            updateLyrics(currentTime);
+        });
+
+        initializeLyrics();
+    </script>
+</body>
+</html>
